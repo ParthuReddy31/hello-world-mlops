@@ -1,0 +1,44 @@
+name: CI - Train_and_save_the_model
+on: 
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  matrix-pip:
+    name: Train_and_save_the_model
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python: [3.11, 3.12]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      
+      - name: setup_python
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.python }}
+      
+      - name: upgrade_pip
+        run: python -m pip install --upgrade pip setuptools wheel
+      
+      - name: install_project_dependencies
+        run: python -m pip install -r requirements.txt
+
+      - name: train_the_model
+        run: python train.py
+
+      - name:  test_the_model
+        run: |
+          python run_model.py --input "[10, 12, 3, 16]" 
+          python run_model.py --input "[10, 9, 3, 2]"
+          python run_model.py --input "[12, 2, 3, 6]" 
+          python run_model.py --input "[2, 2, 12, 6]" 
+      
+      - name: upload_artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ml-artifacts-${{ matrix.python }}-${{ github.run_id }}
+          path: artifacts        
